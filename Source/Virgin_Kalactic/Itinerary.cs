@@ -166,8 +166,12 @@ namespace Virgin_Kalactic
 		public int numSamples = 20;
 		private int curSample = 0;
 		
-		[KSPField(guiActive = true, guiName = "Demand")]
-		public double demand;
+		//[KSPField(guiActive = true, guiName = "Demand")]
+		//public double demand;
+		
+		[KSPField(guiActive = true, guiName = "Throttle")]
+		public double throttle = 0; // instantiation may not be necessary, setting to 0 until made use of
+		
 		
 		[KSPField(isPersistant = true)]
 		public bool activen = false; //Todo: name this something less stupid
@@ -175,36 +179,36 @@ namespace Virgin_Kalactic
 		private TrackResource tr;
 		
 		public class Resource
-    	{
-        	private PartResourceDefinition _resource = new PartResourceDefinition();
-    		public PartResourceDefinition resource
-    		{
-        		get { return this._resource; }
-    		}
-
-    		private double _maxRate = 1;
-    		public double maxRate
-    		{
+		{
+			private PartResourceDefinition _resource = new PartResourceDefinition();
+			public PartResourceDefinition resource
+			{
+				get { return this._resource; }
+			}
+			
+			private double _maxRate = 1;
+			public double maxRate
+			{
 				get { return this._maxRate; }
-    		}
-
-    		private FloatCurve _rateCurve = new FloatCurve();
-    		public FloatCurve rateCurve
-    		{
-        		get { return this._rateCurve; }
-    		}
+			}
+			
+			private FloatCurve _rateCurve = new FloatCurve();
+			public FloatCurve rateCurve
+			{
+				get { return this._rateCurve; }
+			}
 			
 			public double[] samples;
-
-    		public Resource(ConfigNode node)
-    		{
-        		if (node.HasValue("resourceName") && PartResourceLibrary.Instance.resourceDefinitions.Any(d => d.name == node.GetValue("resourceName")))
-        		{
-        			this._resource = PartResourceLibrary.Instance.GetDefinition(node.GetValue("resourceName"));
-        			if (node.HasValue("maxRate")) { double.TryParse(node.GetValue("maxRate"), out _maxRate); }
-            		if (node.HasNode("rateCurve")) { _rateCurve.Load(node.GetNode("rateCurve")); }
-            	}
-    		}
+			
+			public Resource(ConfigNode node)
+			{
+				if (node.HasValue("resourceName") && PartResourceLibrary.Instance.resourceDefinitions.Any(d => d.name == node.GetValue("resourceName")))
+				{
+					this._resource = PartResourceLibrary.Instance.GetDefinition(node.GetValue("resourceName"));
+					if (node.HasValue("maxRate")) { double.TryParse(node.GetValue("maxRate"), out _maxRate); }
+					if (node.HasNode("rateCurve")) { _rateCurve.Load(node.GetNode("rateCurve")); }
+				}
+			}
     	}
 		
 		public override void OnStart(PartModule.StartState state)
@@ -225,6 +229,7 @@ namespace Virgin_Kalactic
 					curSample = (curSample + 1) % numSamples;
 					//demand = samples.Average();
 				}
+				
 			}
 		}
 		
