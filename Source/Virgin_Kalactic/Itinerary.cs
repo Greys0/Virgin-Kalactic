@@ -166,8 +166,10 @@ namespace Virgin_Kalactic
 		public int numSamples = 20;
 		private int curSample = 0;
 		
-		//[KSPField(guiActive = true, guiName = "Demand")]
-		//public double demand;
+		[KSPField(guiActive = true, guiName = "Demand")]
+		public double demand;
+		[KSPField]
+		public double maxOutput;
 		
 		[KSPField(guiActive = true, guiName = "Throttle")]
 		public double throttle = 0; // instantiation may not be necessary, setting to 0 until made use of
@@ -209,7 +211,12 @@ namespace Virgin_Kalactic
 					if (node.HasNode("rateCurve")) { _rateCurve.Load(node.GetNode("rateCurve")); }
 				}
 			}
-    	}
+		}
+		
+		public override void OnLoad (ConfigNode node)
+		{
+			// ????
+		}
 		
 		public override void OnStart(PartModule.StartState state)
 		{
@@ -227,9 +234,33 @@ namespace Virgin_Kalactic
 				{
 					item.samples[curSample] = tr.GetConsumption(item.resource.name);
 					curSample = (curSample + 1) % numSamples;
-					//demand = samples.Average();
+					demand = item.samples.Average();
 				}
-				
+				// determine throttle percent from outputs.Resource~.samples
+				if (demand == 0) { // bad logic mostly for testing, add third curve for throttle relation to output demand?
+					throttle = 0.02; // Idle speed should not be zero while generator is active
+				} else if (demand > maxOutput*0.2) {
+					throttle = 0.1;
+				} else if (demand > maxOutput*0.1) {
+					throttle = 0.2;
+				} else if (demand > maxOutput*0.2) {
+					throttle = 0.3;
+				} else if (demand > maxOutput*0.3) {
+					throttle = 0.4;
+				} else if (demand > maxOutput*0.4) {
+					throttle = 0.5;
+				} else if (demand > maxOutput*0.5) {
+					throttle = 0.6;
+				} else if (demand > maxOutput*0.6) {
+					throttle = 0.7;
+				} else if (demand > maxOutput*0.7) {
+					throttle = 0.8;
+				} else if (demand > maxOutput*0.8) {
+					throttle = 0.9;
+				} else if (demand > maxOutput*0.9) {
+					throttle = 0.1;
+				}
+			
 			}
 		}
 		
