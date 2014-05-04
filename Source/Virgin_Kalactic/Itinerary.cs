@@ -9,42 +9,42 @@ namespace Virgin_Kalactic
 	
 	public class BetterPart : Part
 	{
-        public override float RequestResource(int resourceID, float demand)
+        	public override float RequestResource(int resourceID, float demand)
 		{
-            return (float)RequestResource(resourceID, (double)demand);
+            		return (float)RequestResource(resourceID, (double)demand);
 		}
 
-        public override float RequestResource(string resourceName, float demand)
-        {
-            return (float)RequestResource(resourceName, (double)demand);
-        }
+        	public override float RequestResource(string resourceName, float demand)
+        	{
+            		return (float)RequestResource(resourceName, (double)demand);
+        	}
 
-        public override double RequestResource(int resourceID, double demand)
-        {
-            return RequestResource(PartResourceLibrary.Instance.GetDefinition(resourceID).name, demand);
-        }
+        	public override double RequestResource(int resourceID, double demand)
+        	{
+            		return RequestResource(PartResourceLibrary.Instance.GetDefinition(resourceID).name, demand);
+        	}
 
-        public override double RequestResource(string resourceName, double demand)
-        {
-            TrackResource tr = DictionaryManager.GetTrackResourceForVessel(vessel);
-            double accepted = base.RequestResource(resourceName, demand);
-            tr.Sample(resourceName, demand, accepted);
-            return accepted;
-        }
+        	public override double RequestResource(string resourceName, double demand)
+        	{
+            		TrackResource tr = DictionaryManager.GetTrackResourceForVessel(vessel);
+            		double accepted = base.RequestResource(resourceName, demand);
+            		tr.Sample(resourceName, demand, accepted);
+            		return accepted;
+        	}
 	}
 	
 	[KSPAddon (KSPAddon.Startup.Flight, false) ]
 	public class DictionaryManager : UnityEngine.MonoBehaviour
 	{
 		private static Dictionary<Vessel, TrackResource> vesselResourceDict = new Dictionary<Vessel, TrackResource>();
-        static DictionaryManager Instance;          
+        	static DictionaryManager Instance;          
 		
 		public void Start()
 		{
 			GameEvents.onVesselGoOffRails.Add (CTRFV);
 			GameEvents.onVesselGoOnRails.Add (RVFD);
 			GameEvents.onVesselWillDestroy.Add (RVFD);
-            Instance = this;
+            		Instance = this;
 		}
 		
 		public void onDestroy()
@@ -157,36 +157,36 @@ namespace Virgin_Kalactic
 	
 	public class AdvGenerator: PartModule
 	{
-        public class Resource
-        {
-            private PartResourceDefinition _resource = new PartResourceDefinition();
-            public PartResourceDefinition resource
-            {
-                get { return this._resource; }
-            }
+        	public class Resource
+        	{
+            		private PartResourceDefinition _resource = new PartResourceDefinition();
+            		public PartResourceDefinition resource
+            		{
+                		get { return this._resource; }
+            		}
 
-            private double _maxRate = 1;
-            public double maxRate
-            {
-                get { return this._maxRate; }
-            }
+            		private double _maxRate = 1;
+            		public double maxRate
+            		{
+                		get { return this._maxRate; }
+            		}
 
-            private FloatCurve _rateCurve = new FloatCurve();
-            public FloatCurve rateCurve
-            {
-                get { return this._rateCurve; }
-            }
+            		private FloatCurve _rateCurve = new FloatCurve();
+            		public FloatCurve rateCurve
+            		{
+                		get { return this._rateCurve; }
+            		}
 
-            public Resource(ConfigNode node)
-            {
-                if (node.HasValue("resourceName") && PartResourceLibrary.Instance.resourceDefinitions.Any(d => d.name == node.GetValue("resourceName")))
-                {
-                    this._resource = PartResourceLibrary.Instance.GetDefinition(node.GetValue("resourceName"));
-                    if (node.HasValue("maxRate")) { double.TryParse(node.GetValue("maxRate"), out _maxRate); }
-                    if (node.HasNode("rateCurve")) { _rateCurve.Load(node.GetNode("rateCurve")); }
-                }
-            }
-        }
+            		public Resource(ConfigNode node)
+            		{
+                		if (node.HasValue("resourceName") && PartResourceLibrary.Instance.resourceDefinitions.Any(d => d.name == node.GetValue("resourceName")))
+                		{
+                    			this._resource = PartResourceLibrary.Instance.GetDefinition(node.GetValue("resourceName"));
+                    			if (node.HasValue("maxRate")) { double.TryParse(node.GetValue("maxRate"), out _maxRate); }
+	                    		if (node.HasNode("rateCurve")) { _rateCurve.Load(node.GetNode("rateCurve")); }
+	                	}
+            		}
+        	}
 		
 		[KSPField]
 		public int numSamples = 20;
@@ -200,24 +200,24 @@ namespace Virgin_Kalactic
 		public bool activen = false; //Todo: name this something less stupid
 		
 		private TrackResource tr;
-        private ConfigNode node = null;
-        public List<Resource> inputs = new List<Resource>();
-        public List<Resource> outputs = new List<Resource>();
+        	private ConfigNode node = null;
+        	public List<Resource> inputs = new List<Resource>();
+        	public List<Resource> outputs = new List<Resource>();
 		
 		
 		public override void OnStart(PartModule.StartState state)
 		{
 			samples = new double[numSamples];
-            LoadResources();
+            		LoadResources();
 		}
-        public override void OnLoad(ConfigNode node)
-        {
-            if (this.node == null)
-            {
-                this.node = node;
-            }
-            LoadResources();
-        }
+        	public override void OnLoad(ConfigNode node)
+        	{
+            		if (this.node == null)
+            		{
+	                	this.node = node;
+	            	}
+            		LoadResources();
+        	}
 
 		public override void OnUpdate()
 		{
@@ -228,7 +228,7 @@ namespace Virgin_Kalactic
 			//	curSample = (curSample + 1) % numSamples;
 			//	demand = samples.Average();
 			//}
-            //TODO: rebuild this using the new Resource class
+            		//TODO: rebuild this using the new Resource class
 		}
 		
 		[KSPEvent(guiActive = true, guiName = "Activate")]
@@ -247,20 +247,20 @@ namespace Virgin_Kalactic
 			Events["Deactivate"].active = false;
 		}
 
-        private void LoadResources()
-        {
-            if (node.HasNode("INPUT") && node.HasNode("OUTPUT"))
-            {
-                inputs.AddRange(this.node.GetNodes("INPUT").Select(n => new Resource(n)));
-                outputs.AddRange(this.node.GetNodes("OUTPUTS").Select(n => new Resource(n)));
-            }
-            else
-            {
-                print("Invalid resources");
-                isEnabled = false;
-                activen = false;
-            }
-        }
+        	private void LoadResources()
+        	{
+            		if (node.HasNode("INPUT") && node.HasNode("OUTPUT"))
+            		{
+                		inputs.AddRange(this.node.GetNodes("INPUT").Select(n => new Resource(n)));
+                		outputs.AddRange(this.node.GetNodes("OUTPUTS").Select(n => new Resource(n)));
+            		}
+            		else
+            		{
+                		print("Invalid resources");
+                		isEnabled = false;
+                		activen = false;
+            		}
+        	}
 	}
 }
 	 
