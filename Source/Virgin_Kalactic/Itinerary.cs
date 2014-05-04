@@ -11,34 +11,23 @@ namespace Virgin_Kalactic
 	{
 		public override float RequestResource (int resourceID, float demand)
 		{
-			TrackResource tr = DictionaryManager.GetTrackResourceForVessel (vessel);
-			double accepted;
-			accepted = (double)base.RequestResource (resourceID, demand);
-			tr.Sample (PartResourceLibrary.Instance.GetDefinition (resourceID).name, (double)demand, accepted);
-			return (float)accepted;
-			
+			return (float)RequestResource(resourceID, (double)demand);
 		}
+
 		public override float RequestResource (string resourceName, float demand)
 		{
-			TrackResource tr = DictionaryManager.GetTrackResourceForVessel (vessel);
-			double accepted;
-			accepted = (double)base.RequestResource (resourceName, demand);
-			tr.Sample (resourceName, (double)demand, accepted);
-			return (float)accepted;
+			return (float)RequestResource(resourceName, (double)demand);
 		}
+
 		public override double RequestResource (int resourceID, double demand)
 		{
-			TrackResource tr = DictionaryManager.GetTrackResourceForVessel (vessel);
-			double accepted;
-			accepted = base.RequestResource (resourceID, demand);
-			tr.Sample (PartResourceLibrary.Instance.GetDefinition (resourceID).name, demand, accepted);
-			return accepted;
+			return RequestResource(PartResourceLibrary.Instance.GetDefinition(resourceID).name, demand);
 		}
+		
 		public override double RequestResource (string resourceName, double demand)
 		{
 			TrackResource tr = DictionaryManager.GetTrackResourceForVessel (vessel);
-			double accepted;
-			accepted = base.RequestResource (resourceName, demand);
+			double accepted = base.RequestResource (resourceName, demand);
 			tr.Sample (resourceName, demand, accepted);
 			return accepted;
 		}
