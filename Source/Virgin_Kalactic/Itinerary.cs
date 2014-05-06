@@ -161,6 +161,7 @@ namespace Virgin_Kalactic
 
 		public List<Resource> inputs = new List<Resource>();
 		public List<Resource> outputs = new List<Resource>();
+		private ConfigNode node = null;
 		
 		[KSPField]
 		public int numSamples = 20;
@@ -168,18 +169,17 @@ namespace Virgin_Kalactic
 		
 		[KSPField(guiActive = true, guiName = "Demand")]
 		public double demand;
-		[KSPField]
-		public double maxOutput;
 		
 		[KSPField(guiActive = true, guiName = "Throttle")]
 		public double throttle = 0; // instantiation may not be necessary, setting to 0 until made use of
-		
+		public double maxOutput;
 		
 		[KSPField(isPersistant = true)]
 		public bool activen = false; //Todo: name this something less stupid
 		
 		private TrackResource tr;
 		
+		// loading
 		public class Resource
 		{
 			private PartResourceDefinition _resource = new PartResourceDefinition();
@@ -204,8 +204,10 @@ namespace Virgin_Kalactic
 			
 			public Resource(ConfigNode node)
 			{
+				Debug.Log ("VKLoading Resource");
 				if (node.HasValue("resourceName") && PartResourceLibrary.Instance.resourceDefinitions.Any(d => d.name == node.GetValue("resourceName")))
 				{
+					Debug.Log ("VKResource Found");
 					this._resource = PartResourceLibrary.Instance.GetDefinition(node.GetValue("resourceName"));
 					if (node.HasValue("maxRate")) { double.TryParse(node.GetValue("maxRate"), out _maxRate); }
 					if (node.HasNode("rateCurve")) { _rateCurve.Load(node.GetNode("rateCurve")); }
@@ -213,20 +215,45 @@ namespace Virgin_Kalactic
 			}
 		}
 		
-		public override void OnLoad (ConfigNode node)
-		{
-			// ????
+		private void LoadResources()
+        {
+			if (node.HasNode("INPUT") && node.HasNode("OUTPUT"))
+			{
+				inputs.AddRange(this.node.GetNodes("INPUT").Select(n => new Resource(n)));
+				outputs.AddRange(this.node.GetNodes("OUTPUTS").Select(n => new Resource(n)));
+            } else {
+				print("Invalid resources");
+				isEnabled = false;
+				activen = false;
+			}
 		}
 		
+		
+		// events
 		public override void OnStart(PartModule.StartState state)
 		{
+			Debug.Log ("VKStart");
+			LoadResources ();
 			foreach (Resource item in outputs)
 			{
 				item.samples = new double[numSamples];
 			}
+			maxOutput = outputs.Sum(r => r.maxRate);
 		}
+		
+		public override void OnLoad(ConfigNode node)
+		{
+			Debug.Log ("VKLoad");
+			if (this.node == null)
+			{
+				this.node = node;
+			}
+			LoadResources();
+		}
+		
 		public override void OnUpdate()
 		{
+			Debug.Log ("VKUpdate");
 			if (!tr) { tr = DictionaryManager.GetTrackResourceForVessel (vessel); }
 			if (activen) 
 			{
@@ -263,6 +290,7 @@ namespace Virgin_Kalactic
 			
 			}
 		}
+		
 		
 		[KSPEvent(guiActive = true, guiName = "Activate")]
 		public void Activate()
