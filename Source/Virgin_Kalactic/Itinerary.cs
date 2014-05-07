@@ -161,7 +161,7 @@ namespace Virgin_Kalactic
 
 		public List<Resource> inputs = new List<Resource>();
 		public List<Resource> outputs = new List<Resource>();
-		private ConfigNode node = null;
+		public ConfigNode node = null;
 		
 		[KSPField]
 		public int numSamples = 20;
@@ -172,12 +172,18 @@ namespace Virgin_Kalactic
 		
 		[KSPField(guiActive = true, guiName = "Throttle")]
 		public double throttle = 0; // instantiation may not be necessary, setting to 0 until made use of
-		public double maxOutput;
+		public double maxOutput;  // temporary for throttle testlogic
 		
+		[KSPField(isPersistant=false, guiName = "Status")]
+		public string status;
 		[KSPField(isPersistant = true)]
 		public bool activen = false; //Todo: name this something less stupid
 		
 		private TrackResource tr;
+		
+		public Resource primary;
+		
+		
 		
 		// loading
 		public class Resource
@@ -201,6 +207,7 @@ namespace Virgin_Kalactic
 			}
 			
 			public double[] samples;
+			public string type;
 			
 			public Resource(ConfigNode node)
 			{
@@ -251,43 +258,44 @@ namespace Virgin_Kalactic
 			LoadResources();
 		}
 		
-		public override void OnUpdate()
+		public void FixedUpdate()
 		{
 			Debug.Log ("VKUpdate");
 			if (!tr) { tr = DictionaryManager.GetTrackResourceForVessel (vessel); }
 			if (activen) 
 			{
+				if (status == "FlameOut")
+				{
+					Deactivate ();
+					return;
+				}
 				foreach (Resource item in outputs)
 				{
 					item.samples[curSample] = tr.GetConsumption(item.resource.name);
 					curSample = (curSample + 1) % numSamples;
 					demand = item.samples.Average();
 				}
-				// determine throttle percent from outputs.Resource~.samples
-				if (demand == 0) { // bad logic mostly for testing, add third curve for throttle relation to output demand?
-					throttle = 0.02; // Idle speed should not be zero while generator is active
-				} else if (demand > maxOutput*0.2) {
-					throttle = 0.1;
-				} else if (demand > maxOutput*0.1) {
-					throttle = 0.2;
-				} else if (demand > maxOutput*0.2) {
-					throttle = 0.3;
-				} else if (demand > maxOutput*0.3) {
-					throttle = 0.4;
-				} else if (demand > maxOutput*0.4) {
-					throttle = 0.5;
-				} else if (demand > maxOutput*0.5) {
-					throttle = 0.6;
-				} else if (demand > maxOutput*0.6) {
-					throttle = 0.7;
-				} else if (demand > maxOutput*0.7) {
-					throttle = 0.8;
-				} else if (demand > maxOutput*0.8) {
-					throttle = 0.9;
-				} else if (demand > maxOutput*0.9) {
-					throttle = 0.1;
+				
+				primary = outputs.Find (x => x.type.Contains("PRIMARY"));
+				
+				throttle = (double)primary.rateCurve.Evaluate((float)(demand/primary.maxRate));
+				double james;
+				
+				foreach (Resource item in inputs)
+				{
+					james = (double)item.rateCurve.Evaluate ((float)throttle);
+					
+					if (james > part.RequestResource(item.resource.name, item.rateCurve.Evaluate((float)(james/item.maxRate))))
+					{
+						status = "FlameOut";
+					} else {
+						status = "Running";
+					}
+					
 				}
-			
+				
+				part.RequestResource(primary.resource.name, demand);
+
 			}
 		}
 		
