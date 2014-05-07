@@ -165,8 +165,8 @@ namespace Virgin_Kalactic
 		public double throttle = 0; // instantiation may not be necessary, setting to 0 until made use of
 		public double maxOutput;  // temporary for throttle testlogic
 		
-		[KSPField(isPersistant=false, guiName = "Status")]
-		public string status;
+		[KSPField(isPersistant = true, guiName = "Status")]
+		public string status = "Inactive";
 		[KSPField(isPersistant = true)]
 		public bool activen = false; //Todo: name this something less stupid
 		
@@ -219,7 +219,7 @@ namespace Virgin_Kalactic
 		{
 			if (node.HasNode ("INPUT") && node.HasNode ("OUTPUT")) {
 				inputs.AddRange (this.node.GetNodes ("INPUT").Select (n => new Resource (n)));
-				outputs.AddRange (this.node.GetNodes ("OUTPUTS").Select (n => new Resource (n)));
+				outputs.AddRange (this.node.GetNodes ("OUTPUT").Select (n => new Resource (n)));
 			} else {
 				print ("Invalid resources");
 				isEnabled = false;
@@ -250,39 +250,42 @@ namespace Virgin_Kalactic
 		
 		public void FixedUpdate ()
 		{
-			Debug.Log ("VKUpdate");
-			if (!tr) {
-				tr = DictionaryManager.GetTrackResourceForVessel (vessel);
-			}
-			if (activen) {
-				if (status == "FlameOut") {
-					Deactivate ();
-					return;
-				}
-				foreach (Resource item in outputs) {
-					item.samples [curSample] = tr.GetConsumption (item.resource.name);
-					curSample = (curSample + 1) % numSamples;
-					demand = item.samples.Average ();
+			double james;
+			if (HighLogic.LoadedSceneIsFlight) {
+				if (!tr) {
+					tr = DictionaryManager.GetTrackResourceForVessel (vessel);
 				}
 				
-				primary = outputs.Find (x => x.type.Contains ("PRIMARY"));
-				
-				throttle = (double)primary.rateCurve.Evaluate ((float)(demand / primary.maxRate));
-				double james;
-				
-				foreach (Resource item in inputs) {
-					james = (double)item.rateCurve.Evaluate ((float)throttle);
+				if (activen) {
+					Debug.Log ("VKUpdate---");
 					
-					if (james > part.RequestResource (item.resource.name, item.rateCurve.Evaluate ((float)(james / item.maxRate)))) {
-						status = "FlameOut";
-					} else {
-						status = "Running";
+					foreach (Resource item in outputs) {
+						item.samples [curSample] = tr.GetConsumption (item.resource.name);
+						curSample = (curSample + 1) % numSamples;
+						demand = item.samples.Average ();
 					}
+					Debug.Log("Outputs Processed");
 					
+					primary = outputs.Find (x => x.type.Contains ("PRIMARY"));
+					Debug.Log("Throttle Driver Selected: " + primary.resource.name); // <----- crashes here
+					throttle = (double)primary.rateCurve.Evaluate((float)demand / (float)primary.maxRate);
+					Debug.Log("Throttle Calculated");
+					
+					foreach (Resource item in inputs) {
+						james = (double)item.rateCurve.Evaluate ((float)throttle);
+						
+						if (james > part.RequestResource (item.resource.name, item.rateCurve.Evaluate ((float)(james / item.maxRate)))) {
+							status = "FlameOut";
+							Deactivate();
+						} else {
+							status = "Running";
+						}
+					}
+					Debug.Log("Inputs Consumed");
+					
+					part.RequestResource (primary.resource.name, -demand);
+					Debug.Log("Outputs Generated");
 				}
-				
-				part.RequestResource (primary.resource.name, demand);
-
 			}
 		}
 		
@@ -290,6 +293,7 @@ namespace Virgin_Kalactic
 		public void Activate ()
 		{
 			activen = true;
+			status = "Running";
 			Events ["Activate"].active = false;
 			Events ["Deactivate"].active = true;
 		}
