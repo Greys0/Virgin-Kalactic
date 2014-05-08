@@ -271,7 +271,6 @@ namespace Virgin_Kalactic
 			if (this.node == null) {
 				this.node = node;
 			}
-			//LoadResources ();
 		}
 		
 		public void FixedUpdate ()
