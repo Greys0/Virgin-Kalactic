@@ -292,9 +292,9 @@ namespace Virgin_Kalactic
 						curSample = (curSample + 1) % numSamples;
 						if (item.samples.Average() > tr.GetConsumption (item.resource.name))
 						{
-							demand = item.samples.Average () * 1.10;
+							demand = item.samples.Average () * 1.01;
 						} else {
-							demand = tr.GetConsumption (item.resource.name) * 1.10;
+							demand = tr.GetConsumption (item.resource.name) * 1.01;
 						}
 					}
 					
@@ -302,7 +302,7 @@ namespace Virgin_Kalactic
 					primary = outputs.Find (x => x.type.Contains ("PRIMARY"));
 					
 					
-					throttle = (double)primary.rateCurve.Evaluate((float)((1 / Time.deltaTime) * demand / primary.maxRate)) + 0.002;
+					throttle = (double)primary.rateCurve.Evaluate((float)((1 / TimeWarp.fixedDeltaTime) * demand / primary.maxRate)) + 0.002;
 					//Debug.Log ("Demand: " + demand + " maxRate: " + primary.maxRate + " DeltaTime: " + Time.deltaTime);
 					
 					// Determine if Generator should Idle
