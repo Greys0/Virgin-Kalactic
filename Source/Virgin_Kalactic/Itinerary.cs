@@ -156,16 +156,21 @@ namespace Virgin_Kalactic
 		public List<Resource> inputs = new List<Resource> ();
 		public List<Resource> outputs = new List<Resource> ();
 		public ConfigNode node = null;
+		
 		[KSPField]
 		public int numSamples = 20;
 		private int curSample = 0;
+		
 		[KSPField(guiActive = true, guiName = "Demand")]
 		public double demand;
+		private double curIn;
+		private double curOut;
 		[KSPField(guiActive = true, guiName = "Throttle")]
 		public double throttle = 0; // instantiation may not be necessary, setting to 0 until made use of
-		public double maxOutput;  // temporary for throttle testlogic
+		[KSPField]
+		public double minThrottle = 0.001;
 		
-		[KSPField(isPersistant = true, guiName = "Status")]
+		[KSPField(guiActive = true, guiName = "Status")]
 		public string status = "Inactive";
 		[KSPField(isPersistant = true)]
 		public bool activen = false; //Todo: name this something less stupid
@@ -191,25 +196,41 @@ namespace Virgin_Kalactic
 			}
 			
 			private FloatCurve _rateCurve = new FloatCurve ();
-
+			
 			public FloatCurve rateCurve {
 				get { return this._rateCurve; }
 			}
 			
+			private FloatCurve _revRateCurve = new FloatCurve ();
+			
+			public FloatCurve revRateCurve {
+				get { return this._revRateCurve; }
+			}
+			
 			public double[] samples;
+			public double minThrottle;
 			public string type;
 			
 			public Resource (ConfigNode node)
 			{
-				Debug.Log ("VKLoading Resource");
+				//Debug.Log ("VKLoading Resource");
 				if (node.HasValue ("resourceName") && PartResourceLibrary.Instance.resourceDefinitions.Any (d => d.name == node.GetValue ("resourceName"))) {
-					Debug.Log ("VKResource Found");
+					//Debug.Log ("VKResource Found");
 					this._resource = PartResourceLibrary.Instance.GetDefinition (node.GetValue ("resourceName"));
-					if (node.HasValue ("maxRate")) {
+					if (node.HasValue ("maxRate"))
+					{
 						double.TryParse (node.GetValue ("maxRate"), out _maxRate);
 					}
-					if (node.HasNode ("rateCurve")) {
+					if (node.HasNode ("rateCurve"))
+					{
 						_rateCurve.Load (node.GetNode ("rateCurve"));
+					}
+					if (node.HasNode ("revRateCurve"))
+					{
+						_revRateCurve.Load (node.GetNode ("revRateCurve"));
+					}
+					if (node.HasValue ("type")) {
+						type = node.GetValue ("type");
 					}
 				}
 			}
@@ -218,73 +239,113 @@ namespace Virgin_Kalactic
 		private void LoadResources ()
 		{
 			if (node.HasNode ("INPUT") && node.HasNode ("OUTPUT")) {
+				Debug.Log ("Loading Input and Output");
 				inputs.AddRange (this.node.GetNodes ("INPUT").Select (n => new Resource (n)));
 				outputs.AddRange (this.node.GetNodes ("OUTPUT").Select (n => new Resource (n)));
-			} else {
-				print ("Invalid resources");
-				isEnabled = false;
-				activen = false;
+				if (inputs.Count > 0 && outputs.Count > 0)
+				{
+					//Debug.Log ("Input and Output loaded successfully");
+					return;
+				}
 			}
+			Debug.Log ("Invalid resources");
+			isEnabled = false;
+			activen = false;
+			
 		}
 		
 		
 		// events
 		public override void OnStart (PartModule.StartState state)
 		{
-			Debug.Log ("VKStart");
+			//Debug.Log ("VKStart");
 			LoadResources ();
 			foreach (Resource item in outputs) {
 				item.samples = new double[numSamples];
 			}
-			maxOutput = outputs.Sum (r => r.maxRate);
 		}
 		
 		public override void OnLoad (ConfigNode node)
 		{
-			Debug.Log ("VKLoad");
+			//Debug.Log ("VKLoad");
 			if (this.node == null) {
 				this.node = node;
 			}
-			LoadResources ();
+			//LoadResources ();
 		}
 		
 		public void FixedUpdate ()
 		{
-			double james;
 			if (HighLogic.LoadedSceneIsFlight) {
 				if (!tr) {
 					tr = DictionaryManager.GetTrackResourceForVessel (vessel);
 				}
 				
 				if (activen) {
-					Debug.Log ("VKUpdate---");
+					double consumed;
+					//Debug.Log ("VKUpdate---");
 					
-					foreach (Resource item in outputs) {
+					// Determine Output Need
+					foreach (Resource item in outputs)
+					{
 						item.samples [curSample] = tr.GetConsumption (item.resource.name);
 						curSample = (curSample + 1) % numSamples;
-						demand = item.samples.Average ();
+						if (item.samples.Average() > tr.GetConsumption (item.resource.name))
+						{
+							demand = item.samples.Average () * 1.10;
+						} else {
+							demand = tr.GetConsumption (item.resource.name) * 1.10;
+						}
 					}
-					Debug.Log("Outputs Processed");
 					
+					// Select Primary Throttle Driver and Determine throttle level necessary for Output
 					primary = outputs.Find (x => x.type.Contains ("PRIMARY"));
-					Debug.Log("Throttle Driver Selected: " + primary.resource.name); // <----- crashes here
-					throttle = (double)primary.rateCurve.Evaluate((float)demand / (float)primary.maxRate);
-					Debug.Log("Throttle Calculated");
 					
-					foreach (Resource item in inputs) {
-						james = (double)item.rateCurve.Evaluate ((float)throttle);
+					
+					throttle = (double)primary.rateCurve.Evaluate((float)((1 / Time.deltaTime) * demand / primary.maxRate)) + 0.002;
+					//Debug.Log ("Demand: " + demand + " maxRate: " + primary.maxRate + " DeltaTime: " + Time.deltaTime);
+					
+					// Determine if Generator should Idle
+					if (throttle < minThrottle)
+					{
+						throttle = minThrottle;
+						status = "Idling";
+					}
+					//Debug.Log("Throttle Calculated: " + throttle);
+					
+					// Determine and consume input resources, watching for inadequate supply
+					foreach (Resource item in inputs)
+					{
+						curIn = (double)(item.maxRate * item.rateCurve.Evaluate ((float)throttle) * TimeWarp.fixedDeltaTime);
+						//Debug.Log ("Requesting: " + curIn);
+						consumed = part.RequestResource (item.resource.name, curIn);
+						//Debug.Log ("Recieved: " + consumed);
 						
-						if (james > part.RequestResource (item.resource.name, item.rateCurve.Evaluate ((float)(james / item.maxRate)))) {
+						if (curIn*0.8 > consumed) {
 							status = "FlameOut";
+							//Debug.Log("Flameout, disabling Generator");
 							Deactivate();
+							break;
 						} else {
 							status = "Running";
 						}
+						//Debug.Log("Input: " + item.resource.name + " Consumed: " + curIn);
 					}
-					Debug.Log("Inputs Consumed");
 					
-					part.RequestResource (primary.resource.name, -demand);
-					Debug.Log("Outputs Generated");
+					// Generate outputs
+					if (status != "FlameOut")
+					{
+						foreach (Resource item in outputs)
+						{
+							curOut = (double)(item.maxRate * item.revRateCurve.Evaluate ((float)throttle) * TimeWarp.fixedDeltaTime);
+							part.RequestResource (item.resource.name, (float)-curOut);
+							//Debug.Log ("Output: " + item.resource.name + " generated: " + curOut);
+						}
+					}
+					
+					
+					
+					//Debug.Log("Outputs Generated: " + part.RequestResource (primary.resource.name, -demand));
 				}
 			}
 		}
