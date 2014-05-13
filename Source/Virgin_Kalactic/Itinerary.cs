@@ -41,16 +41,20 @@ namespace Virgin_Kalactic
 		public void Start ()
 		{
 			GameEvents.onVesselGoOffRails.Add (CTRFV);
-			GameEvents.onVesselGoOnRails.Add (RVFD);
+			//GameEvents.onVesselGoOnRails.Add (RVFD); // Vessel now removed on 
 			GameEvents.onVesselWillDestroy.Add (RVFD);
+			GameEvents.onTimeWarpRateChanged.Add (checkLoaded);
+			GameEvents.onGameSceneLoadRequested.Add (emptyDictionary);
 			Instance = this;
 		}
 		
 		public void onDestroy ()
 		{
 			GameEvents.onVesselGoOffRails.Remove (CTRFV);
-			GameEvents.onVesselGoOnRails.Remove (RVFD);
+			//GameEvents.onVesselGoOnRails.Remove (RVFD);
 			GameEvents.onVesselWillDestroy.Remove (RVFD);
+			GameEvents.onTimeWarpRateChanged.Remove (checkLoaded);
+			GameEvents.onGameSceneLoadRequested.Remove (emptyDictionary);
 		}
 		
 		private void CTRFV (Vessel v)
@@ -63,10 +67,10 @@ namespace Virgin_Kalactic
 			if (!vesselResourceDict.ContainsKey (v)) {
 				TrackResource tr = DictionaryManager.Instance.gameObject.AddComponent<TrackResource> ();     
 				vesselResourceDict.Add (v, tr);
-			} else {
-				Debug.Log ("CreateTrackResForVessel: TrackRes Already Exists for Vessel" + v.GetName ());
+			} //else {
+				//Debug.Log ("CreateTrackResForVessel: TrackRes Already Exists for Vessel" + v.GetName ());
 				//Debug.Log (System.Environment.StackTrace);
-			}
+			//}
 			
 		}
 		
@@ -78,6 +82,29 @@ namespace Virgin_Kalactic
 		private static void RemoveVesselFromDict (Vessel v)
 		{
 			vesselResourceDict.Remove (v);
+		}
+		
+		private void emptyDictionary (GameScenes scene)
+		{
+			if (scene != GameScenes.FLIGHT)
+			{
+				vesselResourceDict.Clear();
+			}
+		}
+		
+		private void checkLoaded ()
+		{
+			if (TimeWarp.CurrentRateIndex == 0)
+			{
+				foreach (KeyValuePair<Vessel, TrackResource> pair in vesselResourceDict)
+				{
+					if (!pair.Key.loaded)
+					{
+						RemoveVesselFromDict (pair.Key);
+						Debug.Log ("Vessel No Longer In Range Upon Leaving TimeWarp: " + pair.Key.name);
+					}
+				}
+			}
 		}
 		
 		public static TrackResource GetTrackResourceForVessel (Vessel v)
