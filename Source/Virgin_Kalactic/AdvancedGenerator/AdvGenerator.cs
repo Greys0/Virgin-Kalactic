@@ -96,6 +96,7 @@ namespace AdvancedGenerator
 					}
 				}
 			}
+			
 		}
 		
 		private void LoadResources ()
@@ -218,7 +219,7 @@ namespace AdvancedGenerator
 		}
 		
 		[KSPEvent(guiActive = true, guiName = "Activate")]
-		public void Activate ()
+		public void Activate()
 		{
 			activen = true;
 			status = "Running";
@@ -227,11 +228,29 @@ namespace AdvancedGenerator
 		}
 		
 		[KSPEvent(guiActive = true, guiName = "Deactivate", active = false)]
-		public void Deactivate ()
+		public void Deactivate()
 		{
 			activen = false;
 			Events ["Activate"].active = true;
 			Events ["Deactivate"].active = false;
+		}
+		
+		[KSPAction("Activate Generator")]
+		public void ActivateAction(KSPActionParam param)
+		{
+			Activate();
+		}
+		
+		[KSPAction("Deactivate Generator")]
+		public void DeactivateAction(KSPActionParam param)
+		{
+			Deactivate();
+		}
+		
+		[KSPAction("Toggle Generator")]
+		public void ToggleAction(KSPActionParam param)
+		{
+			if (activen) { Deactivate (); } else { Activate (); }
 		}
 	}
 }
