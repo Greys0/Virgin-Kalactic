@@ -1,8 +1,10 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Itinerary.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="BetterPart\BetterPart.cs">
     <Files>
-      <File FileName="Itinerary.cs" Line="168" Column="2" />
+      <File FileName="TRMJinfoitems\TRMJinfoitems.cs" Line="44" Column="1" />
+      <File FileName="BetterPart\BetterPart.cs" Line="37" Column="32" />
+      <File FileName="AdvancedGenerator\AdvGenerator.cs" Line="10" Column="27" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
