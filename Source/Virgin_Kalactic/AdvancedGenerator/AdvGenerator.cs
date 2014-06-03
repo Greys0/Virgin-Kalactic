@@ -22,8 +22,11 @@ namespace AdvancedGenerator
 		public double demand;
 		private double curIn;
 		private double curOut;
-		[KSPField(guiActive = true, guiName = "Throttle")]
+		
+		//[KSPField(guiActive = true, guiName = "ThrottleRaw")]
 		public double throttle = 0; // instantiation may not be necessary, setting to 0 until made use of
+		[KSPField(guiActive = true, guiName = "Throttle")]
+		public string throttleCleaned;
 		[KSPField]
 		public double minThrottle = 0.001;
 		
@@ -118,7 +121,6 @@ namespace AdvancedGenerator
 			
 		}
 		
-		
 		// events
 		public override void OnStart (PartModule.StartState state)
 		{
@@ -142,79 +144,108 @@ namespace AdvancedGenerator
 		{
 			if (HighLogic.LoadedSceneIsFlight)
 			{
-				if (!tr)
-				{
-					tr = DictionaryManager.GetTrackResourceForVessel (vessel);
-				}
+				
+				TRHandler();
 				
 				if (activen)
 				{
-					double consumed;
+					
 					//Debug.Log ("VKUpdate---");
 					
-					// Determine Output Need
-					foreach (Resource item in outputs)
-					{
-						item.samples [curSample] = tr.GetConsumption (item.resource.name);
-						curSample = (curSample + 1) % numSamples;
-						if (item.samples.Average() > tr.GetConsumption (item.resource.name))
-						{
-							demand = item.samples.Average () * 1.01;
-						} else {
-							demand = tr.GetConsumption (item.resource.name) * 1.01;
-						}
-					}
+					// there's no good reason for doing this, but I'm doing it anyways.
+					UpdateDemand();
 					
 					// Select Primary Throttle Driver and Determine throttle level necessary for Output
 					primary = outputs.Find (x => x.type.Contains ("PRIMARY"));
 					
 					
-					throttle = (double)primary.rateCurve.Evaluate((float)((1 / TimeWarp.fixedDeltaTime) * demand / primary.maxRate)) + 0.002;
+					//throttle = (double)primary.rateCurve.Evaluate((float)((1 / TimeWarp.fixedDeltaTime) * demand / primary.maxRate)) + 0.002;
+					throttle = demand/(primary.maxRate * TimeWarp.fixedDeltaTime);
+					throttle = Math.Max (minThrottle, Math.Min (1, throttle)); // Not integrated into the above line for debugging purposes
 					//Debug.Log ("Demand: " + demand + " maxRate: " + primary.maxRate + " DeltaTime: " + Time.deltaTime);
-					
-					// Determine if Generator should Idle
-					if (throttle < minThrottle)
-					{
-						throttle = minThrottle;
-						status = "Idling";
-					}
 					//Debug.Log("Throttle Calculated: " + throttle);
 					
-					// Determine and consume input resources, watching for inadequate supply
-					foreach (Resource item in inputs)
-					{
-						curIn = (double)(item.maxRate * item.rateCurve.Evaluate ((float)throttle) * TimeWarp.fixedDeltaTime);
-						//Debug.Log ("Requesting: " + curIn);
-						consumed = part.RequestResource (item.resource.name, curIn);
-						//Debug.Log ("Recieved: " + consumed);
-						
-						if (curIn*0.8 > consumed)
-						{
-							status = "FlameOut";
-							//Debug.Log("Flameout, disabling Generator");
-							Deactivate();
-							break;
-						} else {
-							status = "Running";
-						}
-						//Debug.Log("Input: " + item.resource.name + " Consumed: " + curIn);
-					}
+					// Determine and consume input resources
+					ConsumeFuels();
 					
 					// Generate outputs
-					if (status != "FlameOut")
-					{
-						foreach (Resource item in outputs)
-						{
-							curOut = (double)(item.maxRate * item.revRateCurve.Evaluate ((float)throttle) * TimeWarp.fixedDeltaTime);
-							part.RequestResource (item.resource.name, (float)-curOut);
-							//Debug.Log ("Output: " + item.resource.name + " generated: " + curOut);
-						}
-					}
+					if (status != "FlameOut") { GenerateProducts(); }
 					
-					
-					
+					throttleCleaned = (Math.Round(throttle, 3) * 100)+"%";
 					//Debug.Log("Outputs Generated: " + part.RequestResource (primary.resource.name, -demand));
 				}
+			}
+		}
+		
+		private void TRHandler() // separated to method expecting reuse, may not be necessary
+		{
+			if (!tr)
+			{
+				tr = DictionaryManager.GetTrackResourceForVessel (vessel);
+			}
+		}
+		
+		private void UpdateDemand()
+		{
+			foreach (Resource item in outputs)
+			{
+				item.samples [curSample] = tr.GetConsumption (item.resource.name);
+				curSample = (curSample + 1) % numSamples;
+				if (item.samples.Average() > tr.GetConsumption (item.resource.name))
+				{
+					demand = item.samples.Average ();
+				} else {
+					demand = tr.GetConsumption (item.resource.name);
+				}
+				//demand = demand * 1.01 + 0.005;
+			}
+		}
+		
+		private void ConsumeFuels()
+		{
+			
+			double consumed;
+			 
+			//double[] accuracy = new double[inputs.Count];
+			//int index = 0;
+			
+			foreach (Resource item in inputs)
+			{
+				curIn = (double)((item.maxRate * TimeWarp.fixedDeltaTime) * item.rateCurve.Evaluate ((float)throttle));
+				//Debug.Log ("Requesting: " + curIn);
+				consumed = part.RequestResource (item.resource.name, curIn);
+				//Debug.Log ("Recieved: " + consumed);
+				//Debug.Log ("ReqAcc: " + (curIn - consumed));
+				
+				if (status != "FlameOut")
+				{
+					if (curIn*0.8 > consumed)
+					{
+						status = "FlameOut";
+						//Debug.Log("Flameout, disabling Generator");
+						Deactivate();
+					} else {
+						status = "Running";
+					}
+				}
+
+				//accuracy[index] = consumed / curIn;
+				//index = (index + 1) % inputs.Count;
+				//Debug.Log("Input: " + item.resource.name + " Consumed: " + curIn);
+			}
+			//return accuracy.Average();
+		}
+		
+		private void GenerateProducts()
+		{
+			double generated;
+			foreach (Resource item in outputs)
+			{
+				//curOut = (double)(item.maxRate * item.revRateCurve.Evaluate ((float)throttle) * TimeWarp.fixedDeltaTime);
+				curOut = (double)item.maxRate*throttle;
+				generated = part.RequestResource (item.resource.name, -curOut);
+				//Debug.Log ("Accuracy of Output: " + (generated/demand));
+				//Debug.Log ("Output: " + item.resource.name + " generated: " + curOut);
 			}
 		}
 		
