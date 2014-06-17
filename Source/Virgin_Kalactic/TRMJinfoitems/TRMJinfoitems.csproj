@@ -39,7 +39,7 @@
       <HintPath>..\..\..\..\KSP_23-5_stock\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="MechJeb2">
-      <HintPath>..\..\..\..\KSP_23-5_stockfree\GameData\MechJeb2\Plugins\MechJeb2.dll</HintPath>
+      <HintPath>..\..\..\..\KSP_23-5_win\GameData\MechJeb2\Plugins\MechJeb2.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
