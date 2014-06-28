@@ -37,7 +37,7 @@ namespace NodeUtilities
 		{
 			Debug.Log ("-Creating Event for: " + node.id);
 			
-			BaseEvent item = new BaseEvent(new BaseEventList(part, this), node.id, () => toggle(node.id));
+			BaseEvent item = new BaseEvent(new BaseEventList(part, this), node.GetHashCode().ToString(), () => toggle(node.GetHashCode()));
 			item.active = true;
 			item.guiActiveEditor = true;
 			item.guiName = node.id + " || Active";
@@ -46,19 +46,24 @@ namespace NodeUtilities
 
 		}
 		
-		public void toggle (string caller)
+		public void toggle (int caller)
 		{
-			Debug.Log ("toggling AttachNode: " + caller);
-			AttachNode node = part.attachNodes.Find(a => a.id == caller);
+			int hashcode = caller.GetHashCode();
+			AttachNode node = aNList.Find(a => a.GetHashCode() == caller.GetHashCode());
+			Debug.Log ("Toggling Node: " + node.id);
 			
-			if (node != null)
+			
+			if (part.attachNodes.Contains(node))
 			{
+				Debug.Log("Node Exists, Removing");
 				part.attachNodes.Remove(node);
-				Events[node.id].guiName = node.id + " || Inactive";
+				Events[node.GetHashCode().ToString()].guiName = node.id + " || Inactive";
 			} else {
-				part.attachNodes.Add (aNList.Find(a => a.id == caller));
-				Events[node.id].guiName = node.id + " || Active";
+				Debug.Log("Node Absent, Adding");
+				part.attachNodes.Add (node);
+				Events[node.GetHashCode().ToString()].guiName = node.id + " || Active";
 			}
+			Debug.Log ("Toggle Complete");
 		}
 		
 	}
