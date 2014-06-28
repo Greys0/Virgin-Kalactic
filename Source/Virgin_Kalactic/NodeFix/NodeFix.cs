@@ -10,36 +10,23 @@ using UnityEngine;
 
 namespace NodeFix
 {
-	[KSPAddon (KSPAddon.Startup.MainMenu, true) ]
+	[KSPAddon (KSPAddon.Startup.SpaceCentre, true) ]
 	public class NodeFix : MonoBehaviour
 	{
 		public void Start ()
 		{
 			
-			UrlDir.UrlConfig[] partNodes = GameDatabase.Instance.GetConfigs ("PART");
+			ConfigNode[] partNodes = GameDatabase.Instance.GetConfigNodes ("PART");
 			List<AvailablePart> parts = PartLoader.Instance.parts;
 			
 			Debug.Log ("==== Node Fixer ====");
 			
-			foreach (UrlDir.UrlConfig partAtHand in partNodes)
+			foreach (ConfigNode partAtHand in partNodes)
 			{
 				
-
-				ConfigNode configAtHand = partAtHand.config;
-				Debug.Log ("Checking Part: " + configAtHand.GetValue ("name")); // partAtHand.id is blank, .name is PART, .GetValue("name") is blank
+				Debug.Log ("Checking Part: " + partAtHand.GetValue ("name"));
 				
-				/*ConfigNode.ValueList bup = configAtHand.values;
-				ConfigNode.ConfigNodeList pub = configAtHand.;
-				foreach (ConfigNode puba in pub)
-				{
-					//Debug.Log (puba + " || " + puba.id + " || " + puba.CountValues);
-				}
-				foreach (ConfigNode.Value bupa in bup)
-				{
-					Debug.Log (bupa.name + " || " + bupa.value);
-				}*/
-				
-				ConfigNode[] nodes = configAtHand.GetNodes ("NODE");
+				ConfigNode[] nodes = partAtHand.GetNodes ("NODE");
 				
 				foreach (ConfigNode nodeAtHand in nodes)
 				{
@@ -48,7 +35,7 @@ namespace NodeFix
 					if (nodeAtHand.HasValue ("size"))
 					{
 						Debug.Log ("Original Size Confirmed");
-						AvailablePart part = parts.FirstOrDefault (p => p.name == configAtHand.GetValue ("name"));
+						AvailablePart part = parts.FirstOrDefault (p => p.name == partAtHand.GetValue ("name"));
 						Debug.Log ("bup2");
 						if (part != null)
 						{
@@ -70,17 +57,12 @@ namespace NodeFix
 						} else {
 							Debug.Log ("Part does not have any AttachNodes");
 						}
-						
 					} else {
 						Debug.Log ("Node is Invalid: No Size Defined");
 					}
-					
 				}
 			}
 		}
-		
 	}
-	
-	
 }
 
