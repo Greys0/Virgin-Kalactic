@@ -1,0 +1,21 @@
+using System;
+using KSP;
+using UnityEngine;
+
+namespace VirginAnimators
+{
+	
+	public class BalloonAnimator : PartModule
+	{
+	}
+	
+	public class JointLink : PartModule
+	{
+	}
+	
+	public class DustTrails : PartModule
+	{
+	}
+	
+}
+

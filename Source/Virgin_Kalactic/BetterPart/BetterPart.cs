@@ -31,13 +31,6 @@ namespace BetterPart
 			tr.Sample (resourceName, demand, accepted);
 			return accepted;
 		}
-		
-		public List<AttachNode> attachNodesMaster = new List<AttachNode>();
-		
-		public Dictionary<string, bool> attachNodesStates = new Dictionary<string, bool> ();
-		
-		//public static BetterPart GetBetter(this PartModule pm) { return BetterPart(pm.part); }
-		
 	}
 	
 	[KSPAddon (KSPAddon.Startup.Flight, false) ]
@@ -182,6 +175,9 @@ namespace BetterPart
 		}
 	}
 
+}
+
+
 //	public class NodeToggle : PartModule
 //	{
 //		public override void OnInitialize ()
@@ -203,6 +199,3 @@ namespace BetterPart
 //			
 //		}
 //	}
-}
-
-

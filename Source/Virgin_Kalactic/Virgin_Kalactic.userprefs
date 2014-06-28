@@ -1,8 +1,12 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="TRMJinfoitems\TRMJinfoitems.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="VirginGeneric\NodeUtilities.cs">
     <Files>
-      <File FileName="TRMJinfoitems\TRMJinfoitems.cs" Line="3" Column="14" />
+      <File FileName="NodeFix\NodeFix.cs" Line="13" Column="41" />
+      <File FileName="VirginAnimators\VirginAnimators" Line="21" Column="1" />
+      <File FileName="BetterPart\BetterPart.cs" Line="118" Column="28" />
+      <File FileName="VirginGeneric\NodeUtilities.cs" Line="44" Column="37" />
+      <File FileName="AdvancedGenerator\AdvGenerator.cs" Line="250" Column="7" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
