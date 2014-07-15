@@ -5,7 +5,7 @@ using System.Linq;
 using System.Collections.Generic;
 using BetterPart;
 
-namespace AdvancedGenerator
+namespace Generators
 {
 	public class AdvGenerator: PartModule
 	{
@@ -282,6 +282,213 @@ namespace AdvancedGenerator
 		public void ToggleAction(KSPActionParam param)
 		{
 			if (activen) { Deactivate (); } else { Activate (); }
+		}
+	}
+	
+	public class FuelCell : PartModule
+	{
+		
+		public enum state {
+			Disabled,
+			Charging,
+			Discharging,
+			Full,
+			Depleted,
+			ManualCharge,
+			ManualDischarge
+		}
+		
+		
+		[KSPField]
+		public string resource1;
+		[KSPField]
+		public string resource2;
+		[KSPField]
+		public double reagentRatio = 3;
+		[KSPField]
+		public double outputRatio = 10;
+		[KSPField]
+		public double electricOutput = 10;
+		[KSPField]
+		public double Efficiency = 0.6; // 60% loss in each direction
+		
+		
+		private Resource reagent1 = new Resource(); // Hydrogen
+		private Resource reagent2 = new Resource(); // Oxygen
+		private Resource product1 = new Resource(); // H20
+		private Resource electric = new Resource();
+		
+		private class Resource
+		{
+			public PartResourceDefinition definition;
+			public List<PartResource> available = new List<PartResource>(); // parts that contain this resource (specifically the PartResource from thatPart.Resources.List)
+			public double amount;		// How much of it there is
+			public double capacity;		// How much there can be
+		}
+		
+		private TrackResource tr;
+		private Queue<double> trLog = new Queue<double>();
+		
+		[KSPField]
+		public state mode = state.Disabled;
+		
+		public double rate = 0;
+		
+		public Helper.FrameJump checkTimer = new Helper.FrameJump();
+		
+		public override void OnStart (PartModule.StartState state)
+		{
+			reagent1.definition = PartResourceLibrary.Instance.GetDefinition(resource1);
+			reagent1.definition = PartResourceLibrary.Instance.GetDefinition(resource2);
+			electric.definition = PartResourceLibrary.Instance.GetDefinition("ElectricCharge");
+			
+			tr = DictionaryManager.GetTrackResourceForVessel(vessel);
+			
+			BuildResourceDirectory();
+			
+			checkTimer.Setup(100);
+			
+		}
+		
+		public override void OnFixedUpdate ()
+		{
+			rate = tr.GetGeneration("ElectricCharge") - tr.GetConsumption("ElectricCharge");
+			
+			trLog.Enqueue(rate);
+			trLog.Dequeue();
+			
+			if (checkTimer.Good) { CheckMode(); }
+			
+			switch (mode)
+			{
+			case state.Disabled:	return;
+			case state.Full:		return;
+			case state.Depleted:	return;
+			case state.Charging:	return;
+			}
+		}
+		
+		private state CheckMode ()
+		{
+			
+			if (mode == state.ManualCharge || mode == state.ManualDischarge) { return mode; } // Escape if Manual
+			
+			QueryResourceDirectory();
+			
+			if (trLog.Average() > 0)
+			{
+				// state.Charging
+				// check if space for generated reagents
+				if (reagent1.amount < reagent1.capacity && reagent2.amount < reagent2.capacity)
+				{
+					if (product1.amount > 0)
+					{
+						mode = state.Charging; // All systems go
+					} else {
+						mode = state.Depleted; // No product remains to electrolyze
+					}
+				} else {
+					mode = state.Full; // No space remains to store electrolysis results
+				}
+			} else {
+				// state.Discharging
+				// check if reagents available to generate EC
+				if (product1.amount < product1.capacity)
+				{
+					if (reagent1.amount > 0 && reagent2.amount > 0)
+					{
+						mode = state.Discharging; // All systems go
+					} else {
+						mode = state.Depleted; // no reagents remaining to 
+					}
+				} else {
+					mode = state.Full; // No space remaining for product
+				}
+			}
+			return state.Disabled;
+		}
+		
+		private void BuildResourceDirectory()
+		{
+			//needs:
+			//
+			
+			reagent1.available.Clear ();
+			reagent2.available.Clear ();
+			
+			foreach (Part partAtHand in vessel.parts)
+			{
+				
+				foreach (PartResource res in partAtHand.Resources.list)
+				{
+					if (res.name == resource1)
+					{
+						reagent1.available.Add (res);
+					} else if (res.name == resource2) {
+						reagent2.available.Add (res);
+					}
+				}
+			}
+			
+			reagent1.capacity = reagent1.available.Sum(m => m.maxAmount);
+			reagent2.capacity = reagent2.available.Sum(m => m.maxAmount);
+			
+		}
+		
+		private void QueryResourceDirectory()
+		{
+			reagent1.amount = reagent1.available.Sum(a => a.amount);
+			reagent2.amount = reagent2.available.Sum(a => a.amount);
+		}
+		
+		private void Charge ()
+		{
+			double avail = tr.GetGeneration("ElectricCharge") - tr.GetConsumption("ElectricCharge");
+			
+			if (mode == state.Charging || avail <= 0) { return; }
+			
+			if (mode == state.ManualCharge || avail <= 0) { avail = electricOutput; }
+			
+			
+			
+		}
+		
+	}
+
+	public class Helper
+	{
+		
+		// Tracks frames passing based on a cycle period specified
+		public class FrameJump : MonoBehaviour
+		{
+			// Position in Cycle
+			public int Index { get; private set; }
+			
+			// Cycle Length
+			public int Periodicity { get; private set; }
+			
+			// Returns true at Index == 0
+			public bool Good { get { return Index == 0; } }
+			
+			// returns false at Index == 0
+			public bool Bad { get { return !Good; } }
+			
+			// If Start() fires before Setup() has been run
+			public void Start () { if (Periodicity == 0) { enabled = false; } }
+			
+			// Increase Index by one every physics frame, modulo by Periodicity
+			public void FixedUpdate() { Index = (Index + 1) % Periodicity; }
+			
+			// Fill necessary value and enable monobehavior in case it has been disabled
+			public void Setup(int p)
+			{
+				this.Periodicity = p;
+				enabled = true;
+			}
+			
+			// Destroy object via Unity's garbage chute
+			public void Die() { Destroy(this); }
+			
 		}
 	}
 }
