@@ -15,7 +15,7 @@ namespace NodeUtilities
 		
 		public override void OnStart (PartModule.StartState state)
 		{
-			Debug.Log("NodeToggle Prep");
+			//Debug.Log("NodeToggle Prep");
 			if (aNList == null && HighLogic.LoadedSceneIsEditor)
 			{
 				
