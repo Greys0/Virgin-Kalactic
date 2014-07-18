@@ -12,19 +12,34 @@ namespace BetterPart
 		public override float RequestResource (int resourceID, float demand)
 		{
 			return (float)RequestResource (resourceID, (double)demand);
+			// Recast's Float, sends Int
 		}
 
 		public override float RequestResource (string resourceName, float demand)
 		{
 			return (float)RequestResource (resourceName, (double)demand);
+			// Recast's Float, Sends String
 		}
 
 		public override double RequestResource (int resourceID, double demand)
 		{
 			return RequestResource (PartResourceLibrary.Instance.GetDefinition (resourceID).name, demand);
+			// Finds resource name, sends Double
 		}
 		
 		public override double RequestResource (string resourceName, double demand)
+		{
+			return RequestResource (resourceName, demand, PartResourceLibrary.Instance.GetDefinition (resourceName).resourceFlowMode);
+			// Finds default flow mode, sends string and double
+		}
+		
+		public override double RequestResource (int resourceID, double demand, ResourceFlowMode flowMode)
+		{
+			return RequestResource (PartResourceLibrary.Instance.GetDefinition (resourceID).name, demand, flowMode);
+			// Finds Resource Name, send's demand and flowMode
+		}
+		
+		public override double RequestResource (string resourceName, double demand, ResourceFlowMode flowMode)
 		{
 			TrackResource tr = DictionaryManager.GetTrackResourceForVessel (vessel);
 			double accepted = base.RequestResource (resourceName, demand);
