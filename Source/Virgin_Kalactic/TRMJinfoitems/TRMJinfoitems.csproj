@@ -33,13 +33,13 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="UnityEngine">
-      <HintPath>..\..\..\..\KSP_23-5_stock\KSP_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>..\..\..\..\KSP_24-0-32_win\KSP_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\..\..\KSP_23-5_stock\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\..\..\KSP_24-0-32_win\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="MechJeb2">
-      <HintPath>..\..\..\..\KSP_23-5_win\GameData\MechJeb2\Plugins\MechJeb2.dll</HintPath>
+      <HintPath>..\..\..\..\MechJeb2.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
