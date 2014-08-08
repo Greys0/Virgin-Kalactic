@@ -46,6 +46,95 @@ namespace BetterPart
 			tr.Sample (resourceName, demand, accepted);
 			return accepted;
 		}
+		
+		/*
+		public void AddAttachNode (ConfigNode node)
+		{
+			string attachnodeName = node.GetValue ("name");
+			string transformName = node.GetValue ("transform");
+			int size = 1;
+			AttachNodeMethod attachNodeMethod;
+			Transform transform = this.FindModelTransform(transformName);
+			
+			if (attachnodeName != null)
+			{
+				if (transformName != null)
+				{
+					if (transform != null)
+					{
+						if (!node.HasValue("size"))
+						{
+							Debug.Log(
+								"Part: NODE '" + attachnodeName + "' on part " + this.name + " is missing 'size' value" +
+								"/n Defaulting to size = 1"
+								);
+						} else {
+							if (!int.TryParse (node.GetValue ("size"), out size))
+							{
+								Debug.Log (
+									"Part: NODE '" + attachnodeName + "' on part " + this.name + " has invalid 'size value" +
+									"\n Defaulting to size = 1"
+								);
+							}
+						}
+						
+						if (!node.HasValue ("method"))
+						{
+							Debug.Log (
+								"Part: NODE '" + attachnodeName + "' on part " + this.name + " lacks 'method' value" +
+								"\n Detecting appropriate method ..."
+							);
+							
+							if ( attachnodeName == "srfAttach" || attachnodeName == "attach")
+							{
+								attachNodeMethod = AttachNodeMethod.HINGE_JOINT;
+								Debug.Log ("NODE appears to be srfAttach, HINGE_JOINT selected");
+							} else {
+								attachNodeMethod = AttachNodeMethod.FIXED_JOINT;
+							}
+						} else {
+							try
+							{
+								attachNodeMethod = (AttachNodeMethod)Enum.Parse(typeof(AttachNodeMethod), node.GetValue("method").ToUpper());
+							}
+							catch (ArgumentException)
+							{
+								Debug.LogError(
+									"Part: Cannot Add AttachNode to" + this.name +
+									"/n Node has invalid method '" + node.GetValue("method") + "'. Could not parse."
+								);
+								return;
+							}
+						}
+						
+						if (this.rescaleFactor != 1)
+						{
+							transform.localScale = new Vector3(1, 1, 1) * this.rescaleFactor;
+						}
+						
+						AttachNode attachNode = new AttachNode(attachnodeName, transform, size, attachNodeMethod);
+						this.attachNodes.Add (attachNode);
+						
+					} else {
+						Debug.LogError(
+							"Part: Cannot add AttachNode to " + this.name +
+							"\n Part's Model(s) lack specified Transform '" + transformName + "'"
+						);
+					}
+				} else {
+					Debug.LogError(
+						"Part: Cannot add AttachNode to " + this.name +
+						"\n Node requires a 'transform' value in NODE{ name=" + attachnodeName + "}"
+					);
+				}
+			} else {
+				Debug.LogError(
+					"Part: Cannot add AttachNode to " + this.name +
+					"\n Node requires a 'name' value"
+				);
+			}
+		}*/
+		
 	}
 	
 	[KSPAddon (KSPAddon.Startup.Flight, false) ]
@@ -189,7 +278,7 @@ namespace BetterPart
 			sumGeneration = new Dictionary<string, double> ();
 		}
 	}
-
+	
 }
 
 

@@ -13,23 +13,22 @@ namespace srFix
 		
 		public void Start ()
 		{
-			
 			int tallyFix = 0;
 			int tallySrf = 0;
 			
 			Debug.Log ("==== Fixing srfAttachNodes for all parts ====");
 			
-			List<AvailablePart> parts = PartLoader.Instance.parts;
+			List<AvailablePart> pool = PartLoader.Instance.parts;
 			
-			foreach (AvailablePart partAtHand in parts)
+			foreach (AvailablePart part in pool)
 			{
-				Debug.Log("Part: " + partAtHand.title);
+				Debug.Log("Part: " + part.name);
 				
 				AttachNode node;
-				node = partAtHand.partPrefab.attachNodes.Find (x => x.id == "srfAttach");
+				node = part.partPrefab.attachNodes.Find (x => x.id == "srfAttach");
 				
 				if (node == null) {
-					node = partAtHand.partPrefab.attachNodes.Find (x => x.id == "attach");
+					node = part.partPrefab.attachNodes.Find (x => x.id == "attach");
 					if (node != null) { Debug.Log("attach node found"); }
 					
 				} else {
@@ -39,14 +38,14 @@ namespace srFix
 				
 				if (node != null) {
 					tallySrf++;
-					if (partAtHand.partPrefab.srfAttachNode != node)
+					if (part.partPrefab.srfAttachNode != node)
 					{
 						Debug.Log("srfAttachNode Not Set, Fixing...");
-						partAtHand.partPrefab.srfAttachNode = node;
+						part.partPrefab.srfAttachNode = node;
 						tallyFix++;
 						
 					} else {
-						Debug.Log("srfAttachNode Already Set" + partAtHand.partPrefab.srfAttachNode.position.ToString());
+						Debug.Log("srfAttachNode Already Set" + part.partPrefab.srfAttachNode.position.ToString());
 					}
 				} else {
 					Debug.Log("No srfAttachNode Candidates");
@@ -54,7 +53,7 @@ namespace srFix
 				}
 			}
 			
-			Debug.Log ("Parts Total: " + parts.Count);
+			Debug.Log ("Parts Total: " + pool.Count);
 			Debug.Log ("Srf Nodes: " + tallySrf);
 			Debug.Log ("Parts Fixed: " + tallyFix);
 		}
