@@ -1,5 +1,7 @@
-Virgin Kalactic is a mod for Kerbal Space Program which [currently] adds several resources available to other modders, and uses them to make the AdvGenerator partmodule which consumes an unspecified number of input resources in order to generate an unspecified number of output resources; and attempts to adjust the rate at which it operates to account for the needs of the vessel, thus minimizing wasted inputs.
+Virgin Kalactic is a mod for Kerbal Space Program which currently impliments a method of modifying the behavior of Part beyond what is intended by Squad. This is used to enable the TrackResource project, which maintains a running statistic of last-frame resource consumption.
 
-To use the included part, place the generator part (found in the utility category, likely at the end) on your vessel such that it can access a reserve of LiquidFuel; AdvGenerator operates on the same logic as engines so place things accordingly. Once the vessel is launched the generator will default to being disabled, right click on it and enable it when you need it.
+AdvancedGenerator is currently non-functional as it has not been updated to the changes in PartReplacement.PartTapIn
 
-The generator will consume fuel at all times that it is active.
+VirginGeneric is indifferent to these changes
+
+Virgin Kalactic is designed mainly to appeal to developers and has only a few features that are directly accessible to the player during play time.
