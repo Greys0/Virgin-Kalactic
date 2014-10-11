@@ -1,11 +1,11 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="BetterPart\PartReplacement.cs">
+  <MonoDevelop.Ide.Workbench>
     <Files>
-      <File FileName="BetterPart\PartReplacement.cs" Line="34" Column="1" />
-      <File FileName="TrackResource\TrackResource.cs" Line="8" Column="13" />
-      <File FileName="BetterPart\AssemblyInfo.cs" Line="15" Column="1" />
-      <File FileName="TrackResource\AssemblyInfo.cs" Line="13" Column="34" />
+      <File FileName="BetterPart\PartReplacement.cs" Line="10" Column="29" />
+      <File FileName="TrackResource\TrackResource.cs" Line="1" Column="1" />
+      <File FileName="BetterPart\AssemblyInfo.cs" Line="1" Column="1" />
+      <File FileName="TrackResource\AssemblyInfo.cs" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
