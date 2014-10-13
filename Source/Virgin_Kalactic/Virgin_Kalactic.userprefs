@@ -1,11 +1,8 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workbench ActiveDocument="srFix\FixSurfaceNodes.cs">
     <Files>
-      <File FileName="BetterPart\PartReplacement.cs" Line="10" Column="29" />
-      <File FileName="TrackResource\TrackResource.cs" Line="1" Column="1" />
-      <File FileName="BetterPart\AssemblyInfo.cs" Line="1" Column="1" />
-      <File FileName="TrackResource\AssemblyInfo.cs" Line="1" Column="1" />
+      <File FileName="srFix\FixSurfaceNodes.cs" Line="47" Column="48" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
